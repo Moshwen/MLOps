@@ -1,0 +1,47 @@
+pipeline {
+    agent {
+        docker {
+            image 'python:3.8-slim'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // Clone the repository containing the scripts
+                git 'https://github.com/Moshwen/MLOps/tree/main/lab2'
+            }
+        }
+        stage('Установливаем необходимые библиотеки') {
+            steps {
+                sh 'pip install --no-cache-dir -r requirements.txt'
+            }
+        }
+        stage('Создаем датасет') {
+            steps {
+                sh 'python create_dataset.py'
+            }
+        }
+        stage('Выполняем предобработку') {
+            steps {
+                sh 'python preprocessing_dataset.py'
+            }
+        }
+        stage('Обучаем модель') {
+            steps {
+                sh 'python train_model.py'
+            }
+        }
+        stage('Делаем предсказание и оцениваем качество модели') {
+            steps {
+                sh 'python prediction.py'
+            }
+        }
+    }
+    post {
+        always {
+            // Clean up workspace
+            cleanWs()
+        }
+    }
+}
